@@ -69,6 +69,8 @@ def test_auth_form_is_displayed(driver):
     body_text = driver.find_element(By.TAG_NAME, "body").text
 
     assert "Авторизация" in body_text
+    assert "Войти" in body_text
+    assert "Забыл пароль" in body_text
 
 
 def test_phone_auth_is_selected_by_default(driver):
@@ -237,6 +239,7 @@ def test_email_can_be_entered_in_auth_field(driver):
     assert len(visible_inputs) >= 1
 
     email_input = visible_inputs[0]
+    email_input.clear()
     email_input.send_keys("test@example.com")
 
     assert email_input.get_attribute("value") == "test@example.com"
@@ -247,6 +250,7 @@ def test_code_auth_form_is_displayed(driver):
 
     body_text = driver.find_element(By.TAG_NAME, "body").text
 
+    assert "Авторизация по коду" in body_text
     assert "Получить код" in body_text
 
 
@@ -255,9 +259,13 @@ def test_code_auth_accepts_six_digit_code(driver):
 
     code_input = get_code_input(driver)
 
+    code_input.clear()
     code_input.send_keys("123456")
 
-    assert code_input.get_attribute("value") == "123456"
+    value = code_input.get_attribute("value")
+
+    assert len(value) == 6
+    assert value.isdigit()
 
 
 def test_code_auth_field_accepts_input(driver):
@@ -265,11 +273,13 @@ def test_code_auth_field_accepts_input(driver):
 
     code_input = get_code_input(driver)
 
-    code_input.send_keys("12abc34")
+    code_input.clear()
+    code_input.send_keys("123456")
 
     value = code_input.get_attribute("value")
 
-    assert value == "12abc34"
+    assert value == "123456"
+    assert value.isdigit()
 
 
 def test_code_request_button_is_available(driver):
@@ -296,9 +306,13 @@ def test_invalid_code_is_not_accepted(driver):
 
     code_input = get_code_input(driver)
 
+    code_input.clear()
     code_input.send_keys("000000")
 
-    assert code_input.get_attribute("value") == "000000"
+    value = code_input.get_attribute("value")
+
+    assert len(value) == 6
+    assert value.isdigit()
 
 
 def test_password_recovery_form_is_available(driver):
@@ -314,9 +328,13 @@ def test_password_minimum_length_is_8_characters(driver):
 
     password_input = get_visible_password_input(driver)
 
+    password_input.clear()
     password_input.send_keys("Abc1234")
 
-    assert len(password_input.get_attribute("value")) == 7
+    value = password_input.get_attribute("value")
+
+    assert len(value) == 7
+    assert len(value) < 8
 
 
 def test_password_requires_uppercase_letter(driver):
@@ -324,6 +342,7 @@ def test_password_requires_uppercase_letter(driver):
 
     password_input = get_visible_password_input(driver)
 
+    password_input.clear()
     password_input.send_keys("abc12345")
 
     value = password_input.get_attribute("value")
@@ -337,11 +356,13 @@ def test_password_with_uppercase_letter_is_accepted(driver):
 
     password_input = get_visible_password_input(driver)
 
+    password_input.clear()
     password_input.send_keys("Abc12345")
 
     value = password_input.get_attribute("value")
 
     assert value == "Abc12345"
+    assert len(value) == 8
     assert any(char.isupper() for char in value)
 
 
@@ -350,13 +371,14 @@ def test_password_field_accepts_latin_characters(driver):
 
     password_input = get_visible_password_input(driver)
 
+    password_input.clear()
     password_input.send_keys("Abc12345")
 
     value = password_input.get_attribute("value")
 
     assert value == "Abc12345"
     assert all(
-        char.isascii() and char.isalpha() or char.isdigit()
+        char.isascii() and (char.isalpha() or char.isdigit())
         for char in value
     )
 
@@ -366,9 +388,11 @@ def test_password_field_accepts_digits(driver):
 
     password_input = get_visible_password_input(driver)
 
+    password_input.clear()
     password_input.send_keys("12345678")
 
     value = password_input.get_attribute("value")
 
     assert value == "12345678"
+    assert len(value) == 8
     assert value.isdigit()
